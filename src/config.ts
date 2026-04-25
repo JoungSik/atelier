@@ -14,7 +14,7 @@ export interface AtelierConfig {
 }
 
 const DEFAULTS: AtelierConfig = {
-  worktreesParentDir: '${workspaceFolder}/../worktrees-${repoName}',
+  worktreesParentDir: '${homeDir}/Workspace/atelier/${repoName}',
   openMode: 'newWindow',
   copySizeWarnThresholdMB: 100,
   suggestSymlinkFor: ['node_modules', 'vendor/bundle'],

@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import type { CreateWorktreeInput, CreateWorktreeContext } from '../types';
@@ -125,16 +126,24 @@ export async function promptCreateWorktree(repoRoot: string): Promise<void> {
 
   const config = getConfig(vscode.Uri.file(repoRoot));
   const parentDir = expandVariables(config.worktreesParentDir, {
+    homeDir: os.homedir(),
     workspaceFolder: repoRoot,
     repoName: path.basename(repoRoot),
   });
-  const defaultPath = path.resolve(parentDir, branch.replace(/[/\\]/g, '-'));
-  const finalPath = await vscode.window.showInputBox({
-    prompt: '워크트리 생성 경로',
-    value: defaultPath,
-    validateInput: (v) => (v.trim() ? null : '경로는 필수입니다'),
+  await fs.mkdir(parentDir, { recursive: true });
+
+  const folderName = branch.replace(/[/\\]/g, '-');
+  const picked = await vscode.window.showOpenDialog({
+    canSelectFiles: false,
+    canSelectFolders: true,
+    canSelectMany: false,
+    defaultUri: vscode.Uri.file(parentDir),
+    title: `워크트리 부모 디렉토리 선택 (생성될 폴더: ${folderName})`,
+    openLabel: '여기에 생성',
   });
-  if (!finalPath) return;
+  if (!picked || picked.length === 0) return;
+
+  const finalPath = path.join(picked[0].fsPath, folderName);
 
   try {
     await createWorktree({ branch, path: finalPath, sourceRepo: repoRoot });

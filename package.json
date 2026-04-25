@@ -59,19 +59,6 @@
         "title": "Atelier: 현재 창에서 열기"
       },
       {
-        "command": "atelier.lock",
-        "title": "Atelier: 잠금"
-      },
-      {
-        "command": "atelier.unlock",
-        "title": "Atelier: 잠금 해제"
-      },
-      {
-        "command": "atelier.prune",
-        "title": "Atelier: stale 워크트리 정리",
-        "icon": "$(clear-all)"
-      },
-      {
         "command": "atelier.syncWorktreeInclude",
         "title": "Atelier: .worktreeinclude 설정 동기화"
       }
@@ -87,11 +74,6 @@
           "command": "atelier.refresh",
           "when": "view == atelierWorktrees",
           "group": "navigation@2"
-        },
-        {
-          "command": "atelier.prune",
-          "when": "view == atelierWorktrees",
-          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -104,16 +86,6 @@
           "command": "atelier.openInCurrent",
           "when": "view == atelierWorktrees && viewItem =~ /^worktree/",
           "group": "navigation@2"
-        },
-        {
-          "command": "atelier.lock",
-          "when": "view == atelierWorktrees && viewItem =~ /^worktree/ && !(viewItem =~ /locked/)",
-          "group": "1_state@1"
-        },
-        {
-          "command": "atelier.unlock",
-          "when": "view == atelierWorktrees && viewItem =~ /locked/",
-          "group": "1_state@1"
         },
         {
           "command": "atelier.delete",
@@ -129,14 +101,6 @@
         {
           "command": "atelier.openInCurrent",
           "when": "false"
-        },
-        {
-          "command": "atelier.lock",
-          "when": "false"
-        },
-        {
-          "command": "atelier.unlock",
-          "when": "false"
         }
       ]
     },
@@ -145,8 +109,8 @@
       "properties": {
         "atelier.worktreesParentDir": {
           "type": "string",
-          "default": "${workspaceFolder}/../worktrees-${repoName}",
-          "description": "신규 워크트리 기본 생성 위치 (placeholder: ${workspaceFolder}, ${repoName})"
+          "default": "${homeDir}/Workspace/atelier/${repoName}",
+          "description": "신규 워크트리 기본 생성 위치의 부모 디렉토리 (placeholder: ${homeDir}, ${workspaceFolder}, ${repoName})"
         },
         "atelier.openMode": {
           "type": "string",
