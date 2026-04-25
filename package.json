@@ -1,11 +1,19 @@
 {
   "name": "atelier",
   "displayName": "Atelier",
-  "description": "git worktree 자동화 VSCode 확장 (비추적 파일 복사 + 환경 격리 + Claude Code 연동)",
-  "version": "0.0.1",
+  "description": "git worktree 자동화 VSCode 확장 (비추적 파일 자동 복사 + 워크트리별 setup hook)",
+  "version": "0.1.0",
   "publisher": "joungsik",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joungsik/atelier.git"
+  },
+  "homepage": "https://github.com/joungsik/atelier#readme",
+  "bugs": {
+    "url": "https://github.com/joungsik/atelier/issues"
+  },
   "engines": {
     "vscode": "^1.117.0",
     "node": ">=20"
@@ -64,7 +72,7 @@
       },
       {
         "command": "atelier.showWorktreeInfo",
-        "title": "Atelier: 현재 워크트리 환경 정보 표시"
+        "title": "Atelier: 현재 워크트리 정보 표시"
       }
     ],
     "menus": {
