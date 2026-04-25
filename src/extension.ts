@@ -11,6 +11,10 @@ import { syncToWorkspaceSetting } from './fs/worktreeIncludeAdapter';
 import { detectProjectTypes } from './workflow/projectDetect';
 import { runSetupRecipe } from './workflow/setupRecipe';
 import { applyEnvIsolation, calculateWorktreeIndex } from './workflow/envIsolation';
+import { issueHook } from './integration/issueHook';
+import { claudeMdInjectHook } from './integration/claudeMdInjectHook';
+import { plansHook } from './integration/plansHook';
+import { claudeCliHook } from './integration/claudeCliHook';
 
 let model: WorktreeModel | undefined;
 const hooks: CreateWorktreeHook[] = [];
@@ -84,12 +88,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   await model.refresh();
 
-  // #285: 환경 격리 hook 등록
   const envInfoMap = new Map<string, WorktreeEnvInfo>();
   const statusBar = new WorktreeStatusBar(model);
   context.subscriptions.push(statusBar);
 
-  // model은 이 시점에서 반드시 정의됨 (undefined이면 위에서 early return)
   const definedModel = model;
   context.subscriptions.push(
     vscode.commands.registerCommand('atelier.showWorktreeInfo', () =>
@@ -101,17 +103,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     postCreate: async (ctx) => {
       const setupConfig = vscode.workspace.getConfiguration('atelier');
 
-      // 1. 프로젝트 타입 감지
       const projectTypes = await detectProjectTypes(ctx.path);
 
-      // 2. setup recipe 실행 (enabled 설정 확인)
       const setupEnabled = setupConfig.get<boolean>('setup.enabled', true);
       if (setupEnabled) {
         const customHooks = setupConfig.get<string[]>('setup.hook', []);
         await runSetupRecipe(ctx.path, projectTypes, customHooks);
       }
 
-      // 3. 환경 격리 적용 (enabled 설정 확인)
       const envEnabled = setupConfig.get<boolean>('envIsolation.enabled', true);
       if (envEnabled) {
         const basePort = setupConfig.get<number>('envIsolation.basePort', 3000);
@@ -129,7 +128,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             envFileName,
           });
 
-          // Status Bar에 환경 격리 정보 등록
           const envInfo: WorktreeEnvInfo = {
             worktreePath: ctx.path,
             port: result.port,
@@ -152,8 +150,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     },
   };
 
-  const hookDisposable = registerCreateWorktreeHook(envIsolationHook);
-  context.subscriptions.push(hookDisposable);
+  context.subscriptions.push(registerCreateWorktreeHook(issueHook));
+  context.subscriptions.push(registerCreateWorktreeHook(envIsolationHook));
+  context.subscriptions.push(registerCreateWorktreeHook(claudeMdInjectHook));
+  context.subscriptions.push(registerCreateWorktreeHook(plansHook));
+  context.subscriptions.push(registerCreateWorktreeHook(claudeCliHook));
 }
 
 async function pickWorktree(prompt: string): Promise<WorktreeInfo | undefined> {
