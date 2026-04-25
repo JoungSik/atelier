@@ -127,6 +127,11 @@
           "default": true,
           "description": ".context/ 디렉토리 자동 생성"
         },
+        "atelier.worktreeInclude.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "메인 repo의 `.worktreeinclude` 파일에 정의된 비추적 파일을 워크트리로 자동 복사. 파일이 없으면 자동으로 무시됨."
+        },
         "atelier.setup.hook": {
           "type": "array",
           "items": { "type": "string" },

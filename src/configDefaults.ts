@@ -6,6 +6,9 @@ export interface AtelierConfig {
   contextDir: {
     enabled: boolean;
   };
+  worktreeInclude: {
+    enabled: boolean;
+  };
   setup: {
     hook: string[];
   };
@@ -15,6 +18,9 @@ export const DEFAULTS: AtelierConfig = {
   worktreesParentDir: '${homeDir}/Workspace/atelier/${repoName}',
   openMode: 'newWindow',
   contextDir: {
+    enabled: true,
+  },
+  worktreeInclude: {
     enabled: true,
   },
   setup: {
