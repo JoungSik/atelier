@@ -83,27 +83,6 @@ export async function worktreeListPorcelain(repo: string): Promise<Buffer> {
   return runGitBuffer(repo, ['worktree', 'list', '--porcelain', '-z']);
 }
 
-export async function worktreePrune(repo: string, dryRun = false): Promise<string> {
-  const args = ['worktree', 'prune', '--verbose'];
-  if (dryRun) args.push('--dry-run');
-  return runGit(repo, args);
-}
-
-export async function worktreeLock(
-  repo: string,
-  worktreePath: string,
-  reason?: string,
-): Promise<void> {
-  const args = ['worktree', 'lock'];
-  if (reason) args.push('--reason', reason);
-  args.push(worktreePath);
-  await runGit(repo, args);
-}
-
-export async function worktreeUnlock(repo: string, worktreePath: string): Promise<void> {
-  await runGit(repo, ['worktree', 'unlock', worktreePath]);
-}
-
 export async function gitCommonDir(repo: string): Promise<string> {
   return (await runGit(repo, ['rev-parse', '--git-common-dir'])).trim();
 }
@@ -114,5 +93,21 @@ export async function isInsideWorkTree(repo: string): Promise<boolean> {
     return out.trim() === 'true';
   } catch {
     return false;
+  }
+}
+
+export async function branchDelete(repo: string, branch: string, force = false): Promise<void> {
+  await runGit(repo, ['branch', force ? '-D' : '-d', branch]);
+}
+
+export async function statusPorcelain(repo: string): Promise<string> {
+  return runGit(repo, ['status', '--porcelain']);
+}
+
+export async function unpushedCommits(repo: string): Promise<string> {
+  try {
+    return await runGit(repo, ['log', '@{u}..HEAD', '--oneline']);
+  } catch {
+    return '';
   }
 }

@@ -44,6 +44,23 @@
         "command": "atelier.create",
         "title": "Atelier: 새 워크트리 생성",
         "icon": "$(add)"
+      },
+      {
+        "command": "atelier.delete",
+        "title": "Atelier: 워크트리 삭제",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "atelier.openInNewWindow",
+        "title": "Atelier: 새 창에서 열기"
+      },
+      {
+        "command": "atelier.openInCurrent",
+        "title": "Atelier: 현재 창에서 열기"
+      },
+      {
+        "command": "atelier.syncWorktreeInclude",
+        "title": "Atelier: .worktreeinclude 설정 동기화"
       }
     ],
     "menus": {
@@ -58,6 +75,33 @@
           "when": "view == atelierWorktrees",
           "group": "navigation@2"
         }
+      ],
+      "view/item/context": [
+        {
+          "command": "atelier.openInNewWindow",
+          "when": "view == atelierWorktrees && viewItem =~ /^worktree/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "atelier.openInCurrent",
+          "when": "view == atelierWorktrees && viewItem =~ /^worktree/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "atelier.delete",
+          "when": "view == atelierWorktrees && viewItem =~ /^worktree/",
+          "group": "9_danger@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "atelier.openInNewWindow",
+          "when": "false"
+        },
+        {
+          "command": "atelier.openInCurrent",
+          "when": "false"
+        }
       ]
     },
     "configuration": {
@@ -65,8 +109,8 @@
       "properties": {
         "atelier.worktreesParentDir": {
           "type": "string",
-          "default": "${workspaceFolder}/../worktrees-${repoName}",
-          "description": "신규 워크트리 기본 생성 위치 (placeholder: ${workspaceFolder}, ${repoName})"
+          "default": "${homeDir}/Workspace/atelier/${repoName}",
+          "description": "신규 워크트리 기본 생성 위치의 부모 디렉토리 (placeholder: ${homeDir}, ${workspaceFolder}, ${repoName})"
         },
         "atelier.openMode": {
           "type": "string",
