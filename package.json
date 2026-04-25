@@ -190,16 +190,6 @@
           "default": true,
           "description": "gh CLI 사용 여부 (false이면 GITHUB_TOKEN + REST API 사용)"
         },
-        "atelier.claudeCli.autoStart": {
-          "type": "boolean",
-          "default": true,
-          "description": "워크트리 생성 후 Claude Code CLI 자동 시작"
-        },
-        "atelier.claudeCli.command": {
-          "type": "string",
-          "default": "claude",
-          "description": "Claude Code CLI 실행 명령어"
-        },
         "atelier.plans.autoCreate": {
           "type": "boolean",
           "default": true,

@@ -14,7 +14,6 @@ import { applyEnvIsolation, calculateWorktreeIndex } from './workflow/envIsolati
 import { issueHook } from './integration/issueHook';
 import { claudeMdInjectHook } from './integration/claudeMdInjectHook';
 import { plansHook } from './integration/plansHook';
-import { claudeCliHook } from './integration/claudeCliHook';
 
 let model: WorktreeModel | undefined;
 const hooks: CreateWorktreeHook[] = [];
@@ -154,7 +153,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(registerCreateWorktreeHook(envIsolationHook));
   context.subscriptions.push(registerCreateWorktreeHook(claudeMdInjectHook));
   context.subscriptions.push(registerCreateWorktreeHook(plansHook));
-  context.subscriptions.push(registerCreateWorktreeHook(claudeCliHook));
 }
 
 async function pickWorktree(prompt: string): Promise<WorktreeInfo | undefined> {
