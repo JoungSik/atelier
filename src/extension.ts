@@ -1,10 +1,16 @@
 import * as vscode from 'vscode';
+import * as path from 'node:path';
 import { WorktreeModel } from './model/worktreeModel';
 import { WorktreeTreeProvider } from './ui/worktreeTreeProvider';
+import { WorktreeStatusBar, showWorktreeInfo } from './ui/statusBar';
+import type { WorktreeEnvInfo } from './ui/statusBar';
 import type { CreateWorktreeHook, WorktreeInfo } from './types';
 import { promptCreateWorktree } from './workflow/createWorktree';
 import { deleteWorktree } from './workflow/deleteWorktree';
 import { syncToWorkspaceSetting } from './fs/worktreeIncludeAdapter';
+import { detectProjectTypes } from './workflow/projectDetect';
+import { runSetupRecipe } from './workflow/setupRecipe';
+import { applyEnvIsolation, calculateWorktreeIndex } from './workflow/envIsolation';
 
 let model: WorktreeModel | undefined;
 const hooks: CreateWorktreeHook[] = [];
@@ -77,6 +83,77 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   );
 
   await model.refresh();
+
+  // #285: 환경 격리 hook 등록
+  const envInfoMap = new Map<string, WorktreeEnvInfo>();
+  const statusBar = new WorktreeStatusBar(model);
+  context.subscriptions.push(statusBar);
+
+  // model은 이 시점에서 반드시 정의됨 (undefined이면 위에서 early return)
+  const definedModel = model;
+  context.subscriptions.push(
+    vscode.commands.registerCommand('atelier.showWorktreeInfo', () =>
+      showWorktreeInfo(definedModel, envInfoMap),
+    ),
+  );
+
+  const envIsolationHook: CreateWorktreeHook = {
+    postCreate: async (ctx) => {
+      const setupConfig = vscode.workspace.getConfiguration('atelier');
+
+      // 1. 프로젝트 타입 감지
+      const projectTypes = await detectProjectTypes(ctx.path);
+
+      // 2. setup recipe 실행 (enabled 설정 확인)
+      const setupEnabled = setupConfig.get<boolean>('setup.enabled', true);
+      if (setupEnabled) {
+        const customHooks = setupConfig.get<string[]>('setup.hook', []);
+        await runSetupRecipe(ctx.path, projectTypes, customHooks);
+      }
+
+      // 3. 환경 격리 적용 (enabled 설정 확인)
+      const envEnabled = setupConfig.get<boolean>('envIsolation.enabled', true);
+      if (envEnabled) {
+        const basePort = setupConfig.get<number>('envIsolation.basePort', 3000);
+        const envFileName = setupConfig.get<string>('envIsolation.envFileName', '.env.worktree');
+        const repoName = path.basename(ctx.sourceRepo);
+        const worktreeName = ctx.branch.replace(/[/\\]/g, '-');
+        const worktreeIndex = calculateWorktreeIndex(ctx.path);
+
+        try {
+          const result = await applyEnvIsolation(ctx.path, {
+            repoName,
+            worktreeName,
+            basePort,
+            worktreeIndex,
+            envFileName,
+          });
+
+          // Status Bar에 환경 격리 정보 등록
+          const envInfo: WorktreeEnvInfo = {
+            worktreePath: ctx.path,
+            port: result.port,
+            envFilePath: result.envFilePath,
+            composeProjectName: result.composeProjectName,
+            dbNameSuffix: result.dbNameSuffix,
+          };
+          envInfoMap.set(ctx.path, envInfo);
+          statusBar.registerEnvInfo(envInfo);
+
+          void vscode.window.showInformationMessage(
+            `Atelier: 환경 격리 완료 (포트: ${result.port}, Env: ${envFileName})`,
+          );
+        } catch (err) {
+          void vscode.window.showErrorMessage(
+            `Atelier: 환경 격리 실패: ${(err as Error).message}`,
+          );
+        }
+      }
+    },
+  };
+
+  const hookDisposable = registerCreateWorktreeHook(envIsolationHook);
+  context.subscriptions.push(hookDisposable);
 }
 
 async function pickWorktree(prompt: string): Promise<WorktreeInfo | undefined> {
