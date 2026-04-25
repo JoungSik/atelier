@@ -24,6 +24,11 @@ export async function createWorktree(initial: CreateWorktreeInput): Promise<void
     if (hook.preCreate) input = await hook.preCreate(input);
   }
 
+  if (input.parentDir && input.branch !== initial.branch) {
+    const folderName = input.branch.replace(/[/\\]/g, '-');
+    input = { ...input, path: path.join(input.parentDir, folderName) };
+  }
+
   const config = getConfig(vscode.Uri.file(input.sourceRepo));
 
   const patterns = await readWorktreeInclude(input.sourceRepo);
@@ -130,23 +135,11 @@ export async function promptCreateWorktree(repoRoot: string): Promise<void> {
     workspaceFolder: repoRoot,
     repoName: path.basename(repoRoot),
   });
-  await fs.mkdir(parentDir, { recursive: true });
-
   const folderName = branch.replace(/[/\\]/g, '-');
-  const picked = await vscode.window.showOpenDialog({
-    canSelectFiles: false,
-    canSelectFolders: true,
-    canSelectMany: false,
-    defaultUri: vscode.Uri.file(parentDir),
-    title: `워크트리 부모 디렉토리 선택 (생성될 폴더: ${folderName})`,
-    openLabel: '여기에 생성',
-  });
-  if (!picked || picked.length === 0) return;
-
-  const finalPath = path.join(picked[0].fsPath, folderName);
+  const finalPath = path.join(parentDir, folderName);
 
   try {
-    await createWorktree({ branch, path: finalPath, sourceRepo: repoRoot });
+    await createWorktree({ branch, path: finalPath, sourceRepo: repoRoot, parentDir });
   } catch (err) {
     void vscode.window.showErrorMessage(`워크트리 생성 실패: ${(err as Error).message}`);
   }

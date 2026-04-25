@@ -22,6 +22,7 @@ export interface CreateWorktreeInput {
   branch: string;
   path: string;
   sourceRepo: string;
+  parentDir?: string;
   metadata?: {
     issue?: IssueRef;
     plan?: string;
