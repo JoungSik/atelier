@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-04-26
+
+### Changed
+
+- README에서 개발자용 빌드/요구사항 섹션을 `CONTRIBUTING.md`로 분리
+
 ## [0.1.1] - 2026-04-26
 
 ### Changed
