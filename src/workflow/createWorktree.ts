@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import type { CreateWorktreeInput, CreateWorktreeContext } from '../types';
-import { worktreeAdd } from '../git/worktreeCli';
+import { worktreeAdd, GitError } from '../git/worktreeCli';
 import { readWorktreeInclude } from '../fs/worktreeIncludeAdapter';
 import {
   estimateCopySize,
@@ -50,7 +50,21 @@ export async function createWorktree(initial: CreateWorktreeInput): Promise<void
   }
 
   await fs.mkdir(path.dirname(input.path), { recursive: true });
-  await worktreeAdd(input.sourceRepo, input.path, { branch: input.branch });
+  try {
+    await worktreeAdd(input.sourceRepo, input.path, { branch: input.branch });
+  } catch (err) {
+    if (err instanceof GitError && /already exists/i.test(err.stderr)) {
+      const choice = await vscode.window.showWarningMessage(
+        `브랜치 '${input.branch}'이(가) 이미 존재합니다.`,
+        { modal: true, detail: '기존 브랜치를 이 워크트리에 체크아웃 하시겠습니까?' },
+        '기존 브랜치 사용',
+      );
+      if (choice !== '기존 브랜치 사용') return;
+      await worktreeAdd(input.sourceRepo, input.path, { ref: input.branch });
+    } else {
+      throw err;
+    }
+  }
 
   if (estimate.files.length > 0) {
     await copyIncludeFiles(input.sourceRepo, input.path, estimate.files);
