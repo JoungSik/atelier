@@ -138,6 +138,47 @@
           "type": "string",
           "default": ".context/CLAUDE.md.template",
           "description": "CLAUDE.md 템플릿 경로 (메인 repo 기준)"
+        },
+        "atelier.issue.providers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["redmine", "github"],
+          "description": "사용 가능한 이슈 Provider 목록"
+        },
+        "atelier.issue.redmine.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "Redmine 인스턴스 URL (예: https://redmine.example.com)"
+        },
+        "atelier.issue.redmine.apiKeyEnv": {
+          "type": "string",
+          "default": "REDMINE_API_KEY",
+          "description": "Redmine API 키 환경변수명"
+        },
+        "atelier.issue.github.useGhCli": {
+          "type": "boolean",
+          "default": true,
+          "description": "gh CLI 사용 여부 (false이면 GITHUB_TOKEN + REST API 사용)"
+        },
+        "atelier.claudeCli.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "워크트리 생성 후 Claude Code CLI 자동 시작"
+        },
+        "atelier.claudeCli.command": {
+          "type": "string",
+          "default": "claude",
+          "description": "Claude Code CLI 실행 명령어"
+        },
+        "atelier.plans.autoCreate": {
+          "type": "boolean",
+          "default": true,
+          "description": "워크트리 생성 시 plans 디렉토리에 계획 파일 자동 생성"
+        },
+        "atelier.plans.dir": {
+          "type": "string",
+          "default": "${homeDir}/.claude/plans",
+          "description": "plans 파일 저장 디렉토리 (placeholder: ${homeDir})"
         }
       }
     }

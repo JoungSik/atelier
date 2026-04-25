@@ -5,6 +5,11 @@ import type { CreateWorktreeHook, WorktreeInfo } from './types';
 import { promptCreateWorktree } from './workflow/createWorktree';
 import { deleteWorktree } from './workflow/deleteWorktree';
 import { syncToWorkspaceSetting } from './fs/worktreeIncludeAdapter';
+// #286: 이슈/PR + Claude Code 통합 hooks
+import { issueHook } from './integration/issueHook';
+import { claudeMdInjectHook } from './integration/claudeMdInjectHook';
+import { plansHook } from './integration/plansHook';
+import { claudeCliHook } from './integration/claudeCliHook';
 
 let model: WorktreeModel | undefined;
 const hooks: CreateWorktreeHook[] = [];
@@ -77,6 +82,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   );
 
   await model.refresh();
+
+  // #286: 이슈/PR + Claude Code 통합 hooks 등록 (순서 중요)
+  // 1. preCreate: 이슈 선택 + 브랜치명 자동 생성
+  context.subscriptions.push(registerCreateWorktreeHook(issueHook));
+  // 2. postCreate: CLAUDE.md에 Issue 섹션 주입
+  context.subscriptions.push(registerCreateWorktreeHook(claudeMdInjectHook));
+  // 3. postCreate: plans 디렉토리 파일 생성
+  context.subscriptions.push(registerCreateWorktreeHook(plansHook));
+  // 4. postCreate: Claude CLI 자동 시작 (마지막)
+  context.subscriptions.push(registerCreateWorktreeHook(claudeCliHook));
 }
 
 async function pickWorktree(prompt: string): Promise<WorktreeInfo | undefined> {
