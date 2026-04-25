@@ -11,7 +11,7 @@ node_modules/**
 eslint.config.*
 .prettierrc*
 esbuild.config.*
-.mocharc.*
+.mocharc.json
 tsconfig.json
 .context/**
 **/*.vsix

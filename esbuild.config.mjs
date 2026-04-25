@@ -6,10 +6,13 @@ const watch = process.argv.includes('--watch');
 const ctx = await esbuild.context({
   entryPoints: ['src/extension.ts'],
   bundle: true,
-  format: 'cjs',
+  format: 'esm',
   platform: 'node',
   target: 'node20',
   outfile: 'out/extension.js',
+  banner: {
+    js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
+  },
   external: ['vscode'],
   sourcemap: !production,
   minify: production,
