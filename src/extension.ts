@@ -1,23 +1,13 @@
 import * as vscode from 'vscode';
-import * as path from 'node:path';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
 import { WorktreeModel } from './model/worktreeModel';
 import { WorktreeTreeProvider } from './ui/worktreeTreeProvider';
 import { WorktreeStatusBar, showWorktreeInfo } from './ui/statusBar';
-import type { WorktreeEnvInfo } from './ui/statusBar';
 import type { CreateWorktreeHook, WorktreeInfo } from './types';
 import { promptCreateWorktree } from './workflow/createWorktree';
 import { deleteWorktree } from './workflow/deleteWorktree';
 import { syncToWorkspaceSetting } from './fs/worktreeIncludeAdapter';
-import { detectProjectTypes } from './workflow/projectDetect';
-import { runSetupRecipe } from './workflow/setupRecipe';
-import { computeEnvIsolation } from './workflow/envIsolation';
-import { issueHook } from './integration/issueHook';
-import { claudeMdInjectHook } from './integration/claudeMdInjectHook';
+import { runSetupHook } from './workflow/runSetupHook';
 import { getConfig } from './config';
-
-const execAsync = promisify(exec);
 
 let model: WorktreeModel | undefined;
 const hooks: CreateWorktreeHook[] = [];
@@ -34,27 +24,11 @@ export function getCreateWorktreeHooks(): readonly CreateWorktreeHook[] {
   return hooks;
 }
 
-async function checkGhCli(): Promise<void> {
-  try {
-    await execAsync('gh --version');
-  } catch {
-    const action = await vscode.window.showWarningMessage(
-      'Atelier: GitHub CLI(gh)가 설치되지 않았습니다. 이슈 통합 기능을 사용하려면 설치가 필요합니다.',
-      '설치 가이드 열기',
-    );
-    if (action === '설치 가이드 열기') {
-      void vscode.env.openExternal(vscode.Uri.parse('https://cli.github.com/'));
-    }
-  }
-}
-
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const repoPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!repoPath) {
     return;
   }
-
-  void checkGhCli();
 
   model = new WorktreeModel(repoPath);
   const treeProvider = new WorktreeTreeProvider(model);
@@ -107,49 +81,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   await model.refresh();
 
-  const envInfoMap = new Map<string, WorktreeEnvInfo>();
   const statusBar = new WorktreeStatusBar(model);
   context.subscriptions.push(statusBar);
 
   const definedModel = model;
   context.subscriptions.push(
-    vscode.commands.registerCommand('atelier.showWorktreeInfo', () =>
-      showWorktreeInfo(definedModel, envInfoMap),
-    ),
+    vscode.commands.registerCommand('atelier.showWorktreeInfo', () => showWorktreeInfo(definedModel)),
   );
 
-  const envIsolationHook: CreateWorktreeHook = {
+  const setupHook: CreateWorktreeHook = {
     postCreate: async (ctx) => {
       const cfg = getConfig(vscode.Uri.file(ctx.sourceRepo));
-
-      const projectTypes = await detectProjectTypes(ctx.path);
-
-      if (cfg.setup.enabled) {
-        await runSetupRecipe(ctx.path, projectTypes, cfg.setup.hook);
-      }
-
-      const repoName = path.basename(ctx.sourceRepo);
-      const worktreeName = ctx.branch.replace(/[/\\]/g, '-');
-
-      const result = computeEnvIsolation({ repoName, worktreeName });
-
-      const envInfo: WorktreeEnvInfo = {
-        worktreePath: ctx.path,
-        composeProjectName: result.composeProjectName,
-        dbNameSuffix: result.dbNameSuffix,
-      };
-      envInfoMap.set(ctx.path, envInfo);
-      statusBar.registerEnvInfo(envInfo);
-
-      void vscode.window.showInformationMessage(
-        `Atelier: 환경 격리 정보 계산 완료 (Status Bar에서 확인)`,
-      );
+      await runSetupHook(ctx.path, cfg.setup.hook);
     },
   };
-
-  context.subscriptions.push(registerCreateWorktreeHook(issueHook));
-  context.subscriptions.push(registerCreateWorktreeHook(envIsolationHook));
-  context.subscriptions.push(registerCreateWorktreeHook(claudeMdInjectHook));
+  context.subscriptions.push(registerCreateWorktreeHook(setupHook));
 }
 
 async function pickWorktree(prompt: string): Promise<WorktreeInfo | undefined> {

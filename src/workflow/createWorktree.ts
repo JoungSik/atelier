@@ -11,18 +11,7 @@ import { getCreateWorktreeHooks } from '../extension';
 import { getConfig } from '../config';
 import { expandVariables } from '../util/variables';
 
-export async function createWorktree(initial: CreateWorktreeInput): Promise<void> {
-  let input = initial;
-  const hooks = getCreateWorktreeHooks();
-  for (const hook of hooks) {
-    if (hook.preCreate) input = await hook.preCreate(input);
-  }
-
-  if (input.parentDir && input.branch !== initial.branch) {
-    const folderName = input.branch.replace(/[/\\]/g, '-');
-    input = { ...input, path: path.join(input.parentDir, folderName) };
-  }
-
+export async function createWorktree(input: CreateWorktreeInput): Promise<void> {
   const config = getConfig(vscode.Uri.file(input.sourceRepo));
 
   const patterns = await readWorktreeInclude(input.sourceRepo);
@@ -37,18 +26,11 @@ export async function createWorktree(initial: CreateWorktreeInput): Promise<void
   }
 
   if (config.contextDir.enabled) {
-    await initContextDir({
-      worktreePath: input.path,
-      vars: {
-        BRANCH: input.branch,
-        ISSUE: input.metadata?.issue?.id?.toString() ?? '',
-        CREATED_AT: new Date().toISOString(),
-      },
-    });
+    await initContextDir(input.path);
   }
 
   const ctx: CreateWorktreeContext = { ...input, createdAt: new Date() };
-  for (const hook of hooks) {
+  for (const hook of getCreateWorktreeHooks()) {
     if (hook.postCreate) await hook.postCreate(ctx);
   }
 
@@ -133,12 +115,17 @@ async function openWorktree(
 }
 
 export async function promptCreateWorktree(repoRoot: string): Promise<void> {
-  const branch = await vscode.window.showInputBox({
-    prompt: '새 워크트리의 브랜치 이름',
-    placeHolder: 'feature/123-foo',
-    validateInput: (v) => (v.trim() ? null : '브랜치 이름은 필수입니다'),
+  const name = await vscode.window.showInputBox({
+    prompt: '새 워크트리 이름 (브랜치명으로도 사용)',
+    placeHolder: 'feature-285-foo',
+    validateInput: (v) => {
+      const trimmed = v.trim();
+      if (!trimmed) return '이름은 필수입니다';
+      if (/[\s/\\]/.test(trimmed)) return '공백, /, \\ 문자는 사용할 수 없습니다';
+      return null;
+    },
   });
-  if (!branch) return;
+  if (!name) return;
 
   const config = getConfig(vscode.Uri.file(repoRoot));
   const parentDir = expandVariables(config.worktreesParentDir, {
@@ -146,11 +133,10 @@ export async function promptCreateWorktree(repoRoot: string): Promise<void> {
     workspaceFolder: repoRoot,
     repoName: path.basename(repoRoot),
   });
-  const folderName = branch.replace(/[/\\]/g, '-');
-  const finalPath = path.join(parentDir, folderName);
+  const finalPath = path.join(parentDir, name);
 
   try {
-    await createWorktree({ branch, path: finalPath, sourceRepo: repoRoot, parentDir });
+    await createWorktree({ branch: name, path: finalPath, sourceRepo: repoRoot, parentDir });
   } catch (err) {
     void vscode.window.showErrorMessage(`워크트리 생성 실패: ${(err as Error).message}`);
   }

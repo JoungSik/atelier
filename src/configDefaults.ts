@@ -7,7 +7,6 @@ export interface AtelierConfig {
     enabled: boolean;
   };
   setup: {
-    enabled: boolean;
     hook: string[];
   };
 }
@@ -19,7 +18,6 @@ export const DEFAULTS: AtelierConfig = {
     enabled: true,
   },
   setup: {
-    enabled: true,
     hook: [],
   },
 };

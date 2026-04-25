@@ -13,7 +13,6 @@ export function getConfig(scope?: vscode.ConfigurationScope): AtelierConfig {
       enabled: cfg.get<boolean>('contextDir.enabled', DEFAULTS.contextDir.enabled),
     },
     setup: {
-      enabled: cfg.get<boolean>('setup.enabled', DEFAULTS.setup.enabled),
       hook: cfg.get<string[]>('setup.hook', DEFAULTS.setup.hook),
     },
   };
