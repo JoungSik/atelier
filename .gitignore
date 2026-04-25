@@ -9,3 +9,4 @@ coverage/
 .vscode-test/
 .context/task.md
 .context/notes.md
+.claude/
