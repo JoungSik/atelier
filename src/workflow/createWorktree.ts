@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import type { CreateWorktreeInput, CreateWorktreeContext } from '../types';
-import { worktreeAdd, GitError } from '../git/worktreeCli';
+import { worktreeAdd, GitError, type WorktreeAddOptions } from '../git/worktreeCli';
 import { readWorktreeInclude } from '../fs/worktreeIncludeAdapter';
 import {
   estimateCopySize,
@@ -50,21 +50,8 @@ export async function createWorktree(initial: CreateWorktreeInput): Promise<void
   }
 
   await fs.mkdir(path.dirname(input.path), { recursive: true });
-  try {
-    await worktreeAdd(input.sourceRepo, input.path, { branch: input.branch });
-  } catch (err) {
-    if (err instanceof GitError && /already exists/i.test(err.stderr)) {
-      const choice = await vscode.window.showWarningMessage(
-        `브랜치 '${input.branch}'이(가) 이미 존재합니다.`,
-        { modal: true, detail: '기존 브랜치를 이 워크트리에 체크아웃 하시겠습니까?' },
-        '기존 브랜치 사용',
-      );
-      if (choice !== '기존 브랜치 사용') return;
-      await worktreeAdd(input.sourceRepo, input.path, { ref: input.branch });
-    } else {
-      throw err;
-    }
-  }
+  const ok = await tryWorktreeAdd(input, { branch: input.branch });
+  if (!ok) return;
 
   if (estimate.files.length > 0) {
     await copyIncludeFiles(input.sourceRepo, input.path, estimate.files);
@@ -91,6 +78,41 @@ export async function createWorktree(initial: CreateWorktreeInput): Promise<void
   }
 
   await openWorktree(input.path, config.openMode);
+}
+
+async function tryWorktreeAdd(
+  input: CreateWorktreeInput,
+  opts: WorktreeAddOptions,
+): Promise<boolean> {
+  try {
+    await worktreeAdd(input.sourceRepo, input.path, opts);
+    return true;
+  } catch (err) {
+    if (!(err instanceof GitError)) throw err;
+
+    if (opts.branch && /a branch named.*already exists/i.test(err.stderr)) {
+      const choice = await vscode.window.showWarningMessage(
+        `브랜치 '${input.branch}'이(가) 이미 존재합니다.`,
+        { modal: true, detail: '기존 브랜치를 이 워크트리에 체크아웃 하시겠습니까?' },
+        '기존 브랜치 사용',
+      );
+      if (choice !== '기존 브랜치 사용') return false;
+      const { branch, ...rest } = opts;
+      return await tryWorktreeAdd(input, { ...rest, ref: branch });
+    }
+
+    if (err.stderr.includes(`'${input.path}' already exists`)) {
+      const choice = await vscode.window.showWarningMessage(
+        `경로 '${input.path}'이(가) 이미 존재합니다.`,
+        { modal: true, detail: '기존 디렉토리를 강제로 사용하시겠습니까?' },
+        '강제 사용',
+      );
+      if (choice !== '강제 사용') return false;
+      return await tryWorktreeAdd(input, { ...opts, force: true });
+    }
+
+    throw err;
+  }
 }
 
 async function copyIncludeFiles(
