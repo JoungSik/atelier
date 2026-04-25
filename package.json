@@ -1,0 +1,123 @@
+{
+  "name": "atelier",
+  "displayName": "Atelier",
+  "description": "git worktree 자동화 VSCode 확장 (비추적 파일 복사 + 환경 격리 + Claude Code 연동)",
+  "version": "0.0.1",
+  "publisher": "joungsik",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.117.0",
+    "node": ">=20"
+  },
+  "categories": ["SCM Providers", "Other"],
+  "keywords": ["git", "worktree", "claude", "multi-stack"],
+  "main": "./out/extension.js",
+  "activationEvents": ["onView:atelierWorktrees"],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "atelier",
+          "title": "Atelier",
+          "icon": "$(repo)"
+        }
+      ]
+    },
+    "views": {
+      "atelier": [
+        {
+          "id": "atelierWorktrees",
+          "name": "Worktrees",
+          "icon": "$(repo)",
+          "contextualTitle": "Atelier Worktrees"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "atelier.refresh",
+        "title": "Atelier: 워크트리 새로고침",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "atelier.create",
+        "title": "Atelier: 새 워크트리 생성",
+        "icon": "$(add)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "atelier.create",
+          "when": "view == atelierWorktrees",
+          "group": "navigation@1"
+        },
+        {
+          "command": "atelier.refresh",
+          "when": "view == atelierWorktrees",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Atelier",
+      "properties": {
+        "atelier.worktreesParentDir": {
+          "type": "string",
+          "default": "${workspaceFolder}/../worktrees-${repoName}",
+          "description": "신규 워크트리 기본 생성 위치 (placeholder: ${workspaceFolder}, ${repoName})"
+        },
+        "atelier.openMode": {
+          "type": "string",
+          "enum": ["newWindow", "reuseWindow", "addToWorkspace"],
+          "default": "newWindow",
+          "description": "워크트리 생성 후 열기 방식"
+        },
+        "atelier.copySizeWarnThresholdMB": {
+          "type": "number",
+          "default": 100,
+          "description": "비추적 파일 복사 크기 경고 임계값 (MB)"
+        },
+        "atelier.suggestSymlinkFor": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["node_modules", "vendor/bundle"],
+          "description": "복사 대신 symlink 권장 패턴"
+        },
+        "atelier.contextDir.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": ".context/ 디렉토리 자동 초기화"
+        },
+        "atelier.contextDir.template": {
+          "type": "string",
+          "default": ".context/CLAUDE.md.template",
+          "description": "CLAUDE.md 템플릿 경로 (메인 repo 기준)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.config.mjs --production",
+    "watch": "node esbuild.config.mjs --watch",
+    "test": "mocha --require ts-node/register \"test/unit/**/*.test.ts\"",
+    "lint": "eslint src test",
+    "format": "prettier --write \"{src,test}/**/*.ts\"",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.116.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vscode/vsce": "^3.9.0",
+    "esbuild": "^0.28.0",
+    "eslint": "^9.0.0",
+    "mocha": "^10.7.0",
+    "prettier": "^3.3.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.5.0"
+  }
+}
