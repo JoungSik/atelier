@@ -1,70 +1,65 @@
 # Atelier
 
-git worktree 자동화 VSCode 확장.
+VSCode extension for git worktree automation.
 
-VSCode 1.117.0+ 내장 git 확장의 worktree 기능을 어댑터 방식으로 보완하여, 메인 repo 옆에 신규 워크트리를 만들 때 비추적 파일(`.env`, `.vscode/` 등)을 자동 복사하고 프로젝트별 setup 명령을 자동 실행한다.
+Complements the built-in git extension's worktree feature in VSCode 1.117.0+ as an adapter — automatically copies untracked files (`.env`, `.vscode/`, etc.) when creating a new worktree, and runs project-specific setup commands.
 
-## 기능
+## Features
 
-- **사이드바 TreeView**: 워크트리 목록 + dirty / locked / stale 상태 표시
-- **워크트리 생성**: 이름 입력 → 디렉토리 + 브랜치 생성 + 비추적 파일 복사 + setup hook 실행 → 새 창 오픈
-- **워크트리 삭제**: TreeView 컨텍스트 메뉴, uncommitted/unpushed 안전 검사
-- **충돌 자동 해결**: 브랜치/디렉토리 이미 존재 시 confirm 후 재시도 (강제 사용 / 기존 브랜치 체크아웃)
-- **`.worktreeinclude` 자동 복사**: 메인 repo의 비추적 파일을 글로브 패턴으로 정의해 워크트리에 복사
-- **`.context/` 디렉토리 생성**: AI 도구용 컨텍스트 디렉토리 자동 생성
-- **Setup hook**: 워크트리 생성 후 셸 명령 자동 실행 (예: `bundle install`, `npm ci`)
-- **Status Bar 위젯**: 현재 워크트리 브랜치명 표시
+- **Sidebar TreeView**: worktree list with dirty / locked / stale status
+- **Create worktree**: name input → directory + branch creation + untracked file copy + setup hook → open in new window
+- **Delete worktree**: TreeView context menu with uncommitted/unpushed safety checks
+- **Conflict auto-resolution**: confirm and retry when branch/directory already exists (force use / checkout existing branch)
+- **`.worktreeinclude` auto-copy**: define untracked files via glob patterns to copy into worktrees
+- **`.context/` directory**: auto-creates a context directory for AI tools
+- **Setup hook**: runs shell commands after worktree creation (e.g. `bundle install`, `npm ci`)
+- **Status bar widget**: shows current worktree branch name
 
-## 설치
-
-### VSIX 직접 설치
-
-1. [Releases](https://github.com/joungsik/atelier/releases)에서 `atelier-x.y.z.vsix` 다운로드
-2. VSCode → Extensions → `...` 메뉴 → "Install from VSIX..."
-
-### Marketplace (예정)
+## Install
 
 ```
-ext install joungsik.atelier
+ext install joungsik.joungsik-atelier
 ```
 
-## 사용법
+Or search for "Atelier (joungsik)" in the VSCode Extensions view.
 
-1. 메인 repo를 VSCode로 연다
-2. 사이드바 Atelier 아이콘 클릭 → "+" 버튼으로 워크트리 생성
-3. 워크트리 이름 입력 (예: `feature-foo`) — 브랜치명도 동일하게 사용됨
-4. 자동으로:
-   - `${worktreesParentDir}/<이름>` 에 워크트리 생성
-   - 같은 이름의 브랜치 생성
-   - `.worktreeinclude` 패턴 매칭 파일 복사
-   - `.context/` 디렉토리 생성
-   - `atelier.setup.hook` 명령 실행
-   - 새 VSCode 창에서 오픈
+## Usage
 
-## 설정
+1. Open the main repo in VSCode
+2. Click the Atelier icon in the sidebar → "+" button to create a worktree
+3. Enter a worktree name (e.g. `feature-foo`) — also used as the branch name
+4. Atelier automatically:
+   - Creates the worktree at `${worktreesParentDir}/<name>`
+   - Creates a branch with the same name
+   - Copies files matching `.worktreeinclude` patterns
+   - Creates the `.context/` directory
+   - Runs `atelier.setup.hook` commands
+   - Opens a new VSCode window
 
-| 설정 | 기본값 | 설명 |
+## Configuration
+
+| Setting | Default | Description |
 |---|---|---|
-| `atelier.worktreesParentDir` | `${homeDir}/Workspace/atelier/${repoName}` | 워크트리 부모 디렉토리 (placeholder 지원: `${homeDir}`, `${workspaceFolder}`, `${repoName}`) |
-| `atelier.openMode` | `newWindow` | 생성 후 열기 방식 (`newWindow` / `reuseWindow` / `addToWorkspace`) |
-| `atelier.contextDir.enabled` | `true` | `.context/` 디렉토리 자동 생성 |
-| `atelier.setup.hook` | `[]` | 워크트리 생성 후 실행할 셸 명령 배열 (cwd: 워크트리 경로) |
+| `atelier.worktreesParentDir` | `${homeDir}/Workspace/atelier/${repoName}` | Parent directory for worktrees (placeholders: `${homeDir}`, `${workspaceFolder}`, `${repoName}`) |
+| `atelier.openMode` | `newWindow` | How to open after creation (`newWindow` / `reuseWindow` / `addToWorkspace`) |
+| `atelier.contextDir.enabled` | `true` | Auto-create the `.context/` directory |
+| `atelier.setup.hook` | `[]` | Shell commands to run after worktree creation (cwd: worktree path) |
 
-### `.worktreeinclude` 파일
+### `.worktreeinclude` file
 
-메인 repo 루트에 두는 파일. 한 줄에 하나씩 글로브 패턴을 작성하면 워크트리 생성 시 매칭되는 비추적 파일을 자동 복사한다.
+Place this file at the main repo root. Each line is a glob pattern; matching untracked files are copied to new worktrees.
 
 ```
-# 환경변수
+# Environment variables
 .env
 .env.local
 
-# VSCode 워크스페이스 설정
+# VSCode workspace settings
 .vscode/settings.json
 .vscode/launch.json
 ```
 
-### Setup hook 예시
+### Setup hook example
 
 `.vscode/settings.json`:
 
@@ -77,34 +72,34 @@ ext install joungsik.atelier
 }
 ```
 
-스택별 예시:
+Stack examples:
 - Ruby/Rails: `["bundle install", "bundle exec rails db:prepare"]`
-- Node (lock 있음): `["npm ci"]`
+- Node (with lockfile): `["npm ci"]`
 - Go: `["go mod download"]`
 - Python: `["pip install -r requirements.txt"]`
-- 다중 스택: `["bundle install", "npm install"]`
+- Multi-stack: `["bundle install", "npm install"]`
 
-실행 결과는 `Atelier Setup` Output 채널에 표시된다. 한 명령이 실패하면 이후 명령은 중단된다.
+Output appears in the `Atelier Setup` output channel. If a command fails, subsequent commands are skipped.
 
-## 개발
+## Development
 
 ```bash
 npm install
-npm run build      # esbuild 번들
-npm run watch      # 파일 변경 감지 빌드
-npm test           # Mocha 단위 테스트
+npm run build      # esbuild bundle
+npm run watch      # rebuild on file changes
+npm test           # Mocha unit tests
 npm run lint       # ESLint
-npm run format     # Prettier 자동 정렬
-npm run package    # vsce package → atelier-x.y.z.vsix
+npm run format     # Prettier
+npm run package    # vsce package
 ```
 
-VSCode에서 F5 → Extension Development Host 새 창에서 동작 확인.
+Press F5 in VSCode to launch an Extension Development Host for manual testing.
 
-## 요구사항
+## Requirements
 
-- VSCode 1.117.0+ (내장 git worktree API 사용)
+- VSCode 1.117.0+ (uses the built-in git worktree API)
 - Node.js 20+
 
-## 라이선스
+## License
 
 MIT
