@@ -1,8 +1,3 @@
-import { promises as fs } from 'node:fs';
-import * as path from 'node:path';
-
-export const ENV_FILE_NAME = '.env.worktree';
-
 export interface EnvIsolationOptions {
   /** 메인 레포 이름 (Docker compose project name에 사용) */
   repoName: string;
@@ -13,7 +8,6 @@ export interface EnvIsolationOptions {
 export interface EnvIsolationResult {
   composeProjectName: string;
   dbNameSuffix: string;
-  envFilePath: string;
 }
 
 /**
@@ -28,28 +22,10 @@ export function sanitizeWorktreeName(name: string): string {
     .replace(/_+/g, '_');
 }
 
-export function buildEnvFileContent(
-  composeProjectName: string,
-  dbNameSuffix: string,
-): string {
-  return [
-    `COMPOSE_PROJECT_NAME=${composeProjectName}`,
-    `DB_NAME_SUFFIX=${dbNameSuffix}`,
-    '',
-  ].join('\n');
-}
-
-export async function applyEnvIsolation(
-  worktreePath: string,
-  options: EnvIsolationOptions,
-): Promise<EnvIsolationResult> {
+export function computeEnvIsolation(options: EnvIsolationOptions): EnvIsolationResult {
   const sanitizedName = sanitizeWorktreeName(options.worktreeName);
-  const composeProjectName = `${sanitizeWorktreeName(options.repoName)}-${sanitizedName}`;
-  const dbNameSuffix = `_${sanitizedName}`;
-  const content = buildEnvFileContent(composeProjectName, dbNameSuffix);
-
-  const envFilePath = path.join(worktreePath, ENV_FILE_NAME);
-  await fs.writeFile(envFilePath, content, 'utf-8');
-
-  return { composeProjectName, dbNameSuffix, envFilePath };
+  return {
+    composeProjectName: `${sanitizeWorktreeName(options.repoName)}-${sanitizedName}`,
+    dbNameSuffix: `_${sanitizedName}`,
+  };
 }

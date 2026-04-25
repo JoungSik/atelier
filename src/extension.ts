@@ -12,7 +12,7 @@ import { deleteWorktree } from './workflow/deleteWorktree';
 import { syncToWorkspaceSetting } from './fs/worktreeIncludeAdapter';
 import { detectProjectTypes } from './workflow/projectDetect';
 import { runSetupRecipe } from './workflow/setupRecipe';
-import { applyEnvIsolation, ENV_FILE_NAME } from './workflow/envIsolation';
+import { computeEnvIsolation } from './workflow/envIsolation';
 import { issueHook } from './integration/issueHook';
 import { claudeMdInjectHook } from './integration/claudeMdInjectHook';
 import { getConfig } from './config';
@@ -131,29 +131,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       const repoName = path.basename(ctx.sourceRepo);
       const worktreeName = ctx.branch.replace(/[/\\]/g, '-');
 
-      try {
-        const result = await applyEnvIsolation(ctx.path, {
-          repoName,
-          worktreeName,
-        });
+      const result = computeEnvIsolation({ repoName, worktreeName });
 
-        const envInfo: WorktreeEnvInfo = {
-          worktreePath: ctx.path,
-          envFilePath: result.envFilePath,
-          composeProjectName: result.composeProjectName,
-          dbNameSuffix: result.dbNameSuffix,
-        };
-        envInfoMap.set(ctx.path, envInfo);
-        statusBar.registerEnvInfo(envInfo);
+      const envInfo: WorktreeEnvInfo = {
+        worktreePath: ctx.path,
+        composeProjectName: result.composeProjectName,
+        dbNameSuffix: result.dbNameSuffix,
+      };
+      envInfoMap.set(ctx.path, envInfo);
+      statusBar.registerEnvInfo(envInfo);
 
-        void vscode.window.showInformationMessage(
-          `Atelier: 환경 격리 완료 (Env: ${ENV_FILE_NAME})`,
-        );
-      } catch (err) {
-        void vscode.window.showErrorMessage(
-          `Atelier: 환경 격리 실패: ${(err as Error).message}`,
-        );
-      }
+      void vscode.window.showInformationMessage(
+        `Atelier: 환경 격리 정보 계산 완료 (Status Bar에서 확인)`,
+      );
     },
   };
 

@@ -1,17 +1,14 @@
 import * as vscode from 'vscode';
-import * as path from 'node:path';
 import type { WorktreeModel } from '../model/worktreeModel';
 import type { WorktreeInfo } from '../types';
 
 /**
  * 워크트리 환경 격리 정보 저장소.
- * envIsolation.ts에서 실행 후 StatusBar가 참조한다.
+ * envIsolation.ts에서 계산 후 StatusBar가 참조한다.
  */
 export interface WorktreeEnvInfo {
   /** 워크트리 경로 */
   worktreePath: string;
-  /** .env 파일 절대 경로 */
-  envFilePath: string;
   /** Docker compose project name */
   composeProjectName: string;
   /** DB suffix */
@@ -98,7 +95,6 @@ export class WorktreeStatusBar implements vscode.Disposable {
       this.item.tooltip = [
         `워크트리: ${branchName}`,
         `경로: ${current.path}`,
-        `Env 파일: ${envInfo.envFilePath}`,
         `Compose: ${envInfo.composeProjectName}`,
         `DB Suffix: ${envInfo.dbNameSuffix}`,
       ].join('\n');
@@ -147,7 +143,6 @@ export async function showWorktreeInfo(
 
   if (envInfo) {
     lines.push(
-      `Env 파일: ${path.basename(envInfo.envFilePath)}`,
       `Compose 프로젝트: ${envInfo.composeProjectName}`,
       `DB Suffix: ${envInfo.dbNameSuffix}`,
     );

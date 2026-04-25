@@ -1,8 +1,5 @@
 import { strict as assert } from 'node:assert';
-import {
-  sanitizeWorktreeName,
-  buildEnvFileContent,
-} from '../../src/workflow/envIsolation';
+import { sanitizeWorktreeName } from '../../src/workflow/envIsolation';
 
 describe('envIsolation.sanitizeWorktreeName', () => {
   it('슬래시를 언더스코어로 변환', () => {
@@ -31,19 +28,5 @@ describe('envIsolation.sanitizeWorktreeName', () => {
 
   it('특수문자 모두 변환 (연속 언더스코어 단일화)', () => {
     assert.equal(sanitizeWorktreeName('feat.#285-env'), 'feat_285_env');
-  });
-});
-
-describe('envIsolation.buildEnvFileContent', () => {
-  it('compose project name + db suffix만 포함', () => {
-    const content = buildEnvFileContent('myrepo-feature-foo', '_feature_foo');
-    assert.match(content, /^COMPOSE_PROJECT_NAME=myrepo-feature-foo$/m);
-    assert.match(content, /^DB_NAME_SUFFIX=_feature_foo$/m);
-    assert.doesNotMatch(content, /^PORT=/m);
-  });
-
-  it('마지막 줄 개행 포함', () => {
-    const content = buildEnvFileContent('proj', '_suffix');
-    assert.ok(content.endsWith('\n'));
   });
 });
