@@ -61,6 +61,10 @@
       {
         "command": "atelier.syncWorktreeInclude",
         "title": "Atelier: .worktreeinclude 설정 동기화"
+      },
+      {
+        "command": "atelier.showWorktreeInfo",
+        "title": "Atelier: 현재 워크트리 환경 정보 표시"
       }
     ],
     "menus": {
@@ -138,6 +142,32 @@
           "type": "string",
           "default": ".context/CLAUDE.md.template",
           "description": "CLAUDE.md 템플릿 경로 (메인 repo 기준)"
+        },
+        "atelier.setup.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "워크트리 생성 후 setup 명령 자동 실행"
+        },
+        "atelier.setup.hook": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "사용자 정의 setup 명령 (기본 명령 후 실행)"
+        },
+        "atelier.envIsolation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "워크트리별 환경 격리 자동 설정 (.env.worktree 생성)"
+        },
+        "atelier.envIsolation.basePort": {
+          "type": "number",
+          "default": 3000,
+          "description": "환경 격리 기본 포트 (워크트리별로 offset 적용)"
+        },
+        "atelier.envIsolation.envFileName": {
+          "type": "string",
+          "default": ".env.worktree",
+          "description": "환경 격리 파일명 (기본: .env.worktree)"
         }
       }
     }
