@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 import { WorktreeModel } from './model/worktreeModel';
 import { WorktreeTreeProvider } from './ui/worktreeTreeProvider';
 import { WorktreeStatusBar, showWorktreeInfo } from './ui/statusBar';
@@ -10,11 +12,12 @@ import { deleteWorktree } from './workflow/deleteWorktree';
 import { syncToWorkspaceSetting } from './fs/worktreeIncludeAdapter';
 import { detectProjectTypes } from './workflow/projectDetect';
 import { runSetupRecipe } from './workflow/setupRecipe';
-import { applyEnvIsolation, calculateWorktreeIndex } from './workflow/envIsolation';
+import { applyEnvIsolation, ENV_FILE_NAME } from './workflow/envIsolation';
 import { issueHook } from './integration/issueHook';
 import { claudeMdInjectHook } from './integration/claudeMdInjectHook';
-import { plansHook } from './integration/plansHook';
 import { getConfig } from './config';
+
+const execAsync = promisify(exec);
 
 let model: WorktreeModel | undefined;
 const hooks: CreateWorktreeHook[] = [];
@@ -31,11 +34,27 @@ export function getCreateWorktreeHooks(): readonly CreateWorktreeHook[] {
   return hooks;
 }
 
+async function checkGhCli(): Promise<void> {
+  try {
+    await execAsync('gh --version');
+  } catch {
+    const action = await vscode.window.showWarningMessage(
+      'Atelier: GitHub CLI(gh)가 설치되지 않았습니다. 이슈 통합 기능을 사용하려면 설치가 필요합니다.',
+      '설치 가이드 열기',
+    );
+    if (action === '설치 가이드 열기') {
+      void vscode.env.openExternal(vscode.Uri.parse('https://cli.github.com/'));
+    }
+  }
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const repoPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!repoPath) {
     return;
   }
+
+  void checkGhCli();
 
   model = new WorktreeModel(repoPath);
   const treeProvider = new WorktreeTreeProvider(model);
@@ -109,38 +128,31 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         await runSetupRecipe(ctx.path, projectTypes, cfg.setup.hook);
       }
 
-      if (cfg.envIsolation.enabled) {
-        const repoName = path.basename(ctx.sourceRepo);
-        const worktreeName = ctx.branch.replace(/[/\\]/g, '-');
-        const worktreeIndex = calculateWorktreeIndex(ctx.path);
+      const repoName = path.basename(ctx.sourceRepo);
+      const worktreeName = ctx.branch.replace(/[/\\]/g, '-');
 
-        try {
-          const result = await applyEnvIsolation(ctx.path, {
-            repoName,
-            worktreeName,
-            basePort: cfg.envIsolation.basePort,
-            worktreeIndex,
-            envFileName: cfg.envIsolation.envFileName,
-          });
+      try {
+        const result = await applyEnvIsolation(ctx.path, {
+          repoName,
+          worktreeName,
+        });
 
-          const envInfo: WorktreeEnvInfo = {
-            worktreePath: ctx.path,
-            port: result.port,
-            envFilePath: result.envFilePath,
-            composeProjectName: result.composeProjectName,
-            dbNameSuffix: result.dbNameSuffix,
-          };
-          envInfoMap.set(ctx.path, envInfo);
-          statusBar.registerEnvInfo(envInfo);
+        const envInfo: WorktreeEnvInfo = {
+          worktreePath: ctx.path,
+          envFilePath: result.envFilePath,
+          composeProjectName: result.composeProjectName,
+          dbNameSuffix: result.dbNameSuffix,
+        };
+        envInfoMap.set(ctx.path, envInfo);
+        statusBar.registerEnvInfo(envInfo);
 
-          void vscode.window.showInformationMessage(
-            `Atelier: 환경 격리 완료 (포트: ${result.port}, Env: ${cfg.envIsolation.envFileName})`,
-          );
-        } catch (err) {
-          void vscode.window.showErrorMessage(
-            `Atelier: 환경 격리 실패: ${(err as Error).message}`,
-          );
-        }
+        void vscode.window.showInformationMessage(
+          `Atelier: 환경 격리 완료 (Env: ${ENV_FILE_NAME})`,
+        );
+      } catch (err) {
+        void vscode.window.showErrorMessage(
+          `Atelier: 환경 격리 실패: ${(err as Error).message}`,
+        );
       }
     },
   };
@@ -148,7 +160,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(registerCreateWorktreeHook(issueHook));
   context.subscriptions.push(registerCreateWorktreeHook(envIsolationHook));
   context.subscriptions.push(registerCreateWorktreeHook(claudeMdInjectHook));
-  context.subscriptions.push(registerCreateWorktreeHook(plansHook));
 }
 
 async function pickWorktree(prompt: string): Promise<WorktreeInfo | undefined> {

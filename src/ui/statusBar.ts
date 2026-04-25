@@ -10,8 +10,6 @@ import type { WorktreeInfo } from '../types';
 export interface WorktreeEnvInfo {
   /** 워크트리 경로 */
   worktreePath: string;
-  /** 할당된 포트 */
-  port: number;
   /** .env 파일 절대 경로 */
   envFilePath: string;
   /** Docker compose project name */
@@ -95,20 +93,16 @@ export class WorktreeStatusBar implements vscode.Disposable {
     const branchName = shortBranchName(current.branch);
     const envInfo = this.envInfoMap.get(current.path);
 
+    this.item.text = `$(git-branch) ${branchName}`;
     if (envInfo) {
-      // 포트 정보가 있으면 함께 표시
-      this.item.text = `$(git-branch) ${branchName} :${envInfo.port}`;
       this.item.tooltip = [
         `워크트리: ${branchName}`,
-        `포트: ${envInfo.port}`,
         `경로: ${current.path}`,
         `Env 파일: ${envInfo.envFilePath}`,
         `Compose: ${envInfo.composeProjectName}`,
         `DB Suffix: ${envInfo.dbNameSuffix}`,
       ].join('\n');
     } else {
-      // 포트 정보 없이 브랜치명만 표시
-      this.item.text = `$(git-branch) ${branchName}`;
       this.item.tooltip = [
         `워크트리: ${branchName}`,
         `경로: ${current.path}`,
@@ -153,7 +147,6 @@ export async function showWorktreeInfo(
 
   if (envInfo) {
     lines.push(
-      `포트: ${envInfo.port}`,
       `Env 파일: ${path.basename(envInfo.envFilePath)}`,
       `Compose 프로젝트: ${envInfo.composeProjectName}`,
       `DB Suffix: ${envInfo.dbNameSuffix}`,

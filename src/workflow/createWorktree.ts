@@ -5,13 +5,7 @@ import * as vscode from 'vscode';
 import type { CreateWorktreeInput, CreateWorktreeContext } from '../types';
 import { worktreeAdd, GitError, type WorktreeAddOptions } from '../git/worktreeCli';
 import { readWorktreeInclude } from '../fs/worktreeIncludeAdapter';
-import {
-  estimateCopySize,
-  shouldWarnSize,
-  formatBytes,
-  suggestSymlinkPatterns,
-  type CopyEstimate,
-} from '../fs/copySize';
+import { enumerateIncludeFiles } from '../fs/includeFiles';
 import { initContextDir } from './contextDir';
 import { getCreateWorktreeHooks } from '../extension';
 import { getConfig } from '../config';
@@ -32,38 +26,19 @@ export async function createWorktree(initial: CreateWorktreeInput): Promise<void
   const config = getConfig(vscode.Uri.file(input.sourceRepo));
 
   const patterns = await readWorktreeInclude(input.sourceRepo);
-  let estimate: CopyEstimate = { bytes: 0, files: [] };
-  if (patterns.length > 0) {
-    estimate = await estimateCopySize(input.sourceRepo, patterns);
-    if (shouldWarnSize(estimate.bytes, config.copySizeWarnThresholdMB)) {
-      const suggestions = suggestSymlinkPatterns(estimate.files, config.suggestSymlinkFor);
-      const detail = suggestions.length
-        ? `복사 크기: ${formatBytes(estimate.bytes)}\nsymlink 권장: ${suggestions.join(', ')}`
-        : `복사 크기: ${formatBytes(estimate.bytes)}`;
-      const choice = await vscode.window.showWarningMessage(
-        '복사할 파일이 큽니다. 계속할까요?',
-        { modal: true, detail },
-        '계속',
-      );
-      if (choice !== '계속') return;
-    }
-  }
+  const includeFiles = patterns.length > 0 ? await enumerateIncludeFiles(input.sourceRepo, patterns) : [];
 
   await fs.mkdir(path.dirname(input.path), { recursive: true });
   const ok = await tryWorktreeAdd(input, { branch: input.branch });
   if (!ok) return;
 
-  if (estimate.files.length > 0) {
-    await copyIncludeFiles(input.sourceRepo, input.path, estimate.files);
+  if (includeFiles.length > 0) {
+    await copyIncludeFiles(input.sourceRepo, input.path, includeFiles);
   }
 
   if (config.contextDir.enabled) {
-    const templatePath = path.isAbsolute(config.contextDir.template)
-      ? config.contextDir.template
-      : path.join(input.sourceRepo, config.contextDir.template);
     await initContextDir({
       worktreePath: input.path,
-      templatePath,
       vars: {
         BRANCH: input.branch,
         ISSUE: input.metadata?.issue?.id?.toString() ?? '',

@@ -122,26 +122,10 @@
           "default": "newWindow",
           "description": "워크트리 생성 후 열기 방식"
         },
-        "atelier.copySizeWarnThresholdMB": {
-          "type": "number",
-          "default": 100,
-          "description": "비추적 파일 복사 크기 경고 임계값 (MB)"
-        },
-        "atelier.suggestSymlinkFor": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": ["node_modules", "vendor/bundle"],
-          "description": "복사 대신 symlink 권장 패턴"
-        },
         "atelier.contextDir.enabled": {
           "type": "boolean",
           "default": true,
           "description": ".context/ 디렉토리 자동 초기화"
-        },
-        "atelier.contextDir.template": {
-          "type": "string",
-          "default": ".context/CLAUDE.md.template",
-          "description": "CLAUDE.md 템플릿 경로 (메인 repo 기준)"
         },
         "atelier.setup.enabled": {
           "type": "boolean",
@@ -153,52 +137,6 @@
           "items": { "type": "string" },
           "default": [],
           "description": "사용자 정의 setup 명령 (기본 명령 후 실행)"
-        },
-        "atelier.envIsolation.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "워크트리별 환경 격리 자동 설정 (.env.worktree 생성)"
-        },
-        "atelier.envIsolation.basePort": {
-          "type": "number",
-          "default": 3000,
-          "description": "환경 격리 기본 포트 (워크트리별로 offset 적용)"
-        },
-        "atelier.envIsolation.envFileName": {
-          "type": "string",
-          "default": ".env.worktree",
-          "description": "환경 격리 파일명 (기본: .env.worktree)"
-        },
-        "atelier.issue.providers": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": ["redmine", "github"],
-          "description": "사용 가능한 이슈 Provider 목록"
-        },
-        "atelier.issue.redmine.endpoint": {
-          "type": "string",
-          "default": "",
-          "description": "Redmine 인스턴스 URL (예: https://redmine.example.com)"
-        },
-        "atelier.issue.redmine.apiKeyEnv": {
-          "type": "string",
-          "default": "REDMINE_API_KEY",
-          "description": "Redmine API 키 환경변수명"
-        },
-        "atelier.issue.github.useGhCli": {
-          "type": "boolean",
-          "default": true,
-          "description": "gh CLI 사용 여부 (false이면 GITHUB_TOKEN + REST API 사용)"
-        },
-        "atelier.plans.autoCreate": {
-          "type": "boolean",
-          "default": true,
-          "description": "워크트리 생성 시 plans 디렉토리에 계획 파일 자동 생성"
-        },
-        "atelier.plans.dir": {
-          "type": "string",
-          "default": "${homeDir}/.claude/plans",
-          "description": "plans 파일 저장 디렉토리 (placeholder: ${homeDir})"
         }
       }
     }

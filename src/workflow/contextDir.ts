@@ -1,14 +1,5 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
-import type { ContextDirRenderer } from '../types';
-
-const PLACEHOLDER_PATTERN = /\{\{(\w+)\}\}/g;
-
-export function renderTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(PLACEHOLDER_PATTERN, (_, name: string) =>
-    name in vars ? vars[name] : '',
-  );
-}
 
 export function injectSection(target: string, section: string, content: string): string {
   const escaped = escapeRegex(section);
@@ -28,32 +19,19 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export const renderer: ContextDirRenderer = {
-  renderTemplate,
-  injectSection,
-};
-
 export interface InitContextDirOptions {
   worktreePath: string;
-  templatePath?: string;
   vars: Record<string, string>;
 }
 
 export async function initContextDir(options: InitContextDirOptions): Promise<void> {
-  const { worktreePath, templatePath, vars } = options;
+  const { worktreePath, vars } = options;
   const contextDir = path.join(worktreePath, '.context');
   await fs.mkdir(contextDir, { recursive: true });
 
   const claudePath = path.join(contextDir, 'CLAUDE.md');
   if (!(await exists(claudePath))) {
-    let body: string;
-    if (templatePath && (await exists(templatePath))) {
-      const template = await fs.readFile(templatePath, 'utf8');
-      body = renderTemplate(template, vars);
-    } else {
-      body = defaultClaudeBody(vars);
-    }
-    await fs.writeFile(claudePath, body, 'utf8');
+    await fs.writeFile(claudePath, defaultClaudeBody(vars), 'utf8');
   }
 
   await ensureFile(path.join(contextDir, 'task.md'), '# Current Task\n\n');

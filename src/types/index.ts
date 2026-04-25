@@ -1,5 +1,5 @@
 export interface IssueRef {
-  tracker: 'redmine' | 'github';
+  tracker: 'github';
   id: string | number;
   title?: string;
   url?: string;
@@ -43,11 +43,3 @@ export interface CreateWorktreeHook {
   postCreate?(ctx: CreateWorktreeContext): Promise<void>;
 }
 
-/**
- * .context/ 템플릿 렌더링 + 섹션 주입 인터페이스.
- * 본체 구현은 #284, 사용은 #286 (이슈 description 주입).
- */
-export interface ContextDirRenderer {
-  renderTemplate(template: string, vars: Record<string, string>): string;
-  injectSection(target: string, section: string, content: string): string;
-}
