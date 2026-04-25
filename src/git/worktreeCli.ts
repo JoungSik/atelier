@@ -116,3 +116,19 @@ export async function isInsideWorkTree(repo: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function branchDelete(repo: string, branch: string, force = false): Promise<void> {
+  await runGit(repo, ['branch', force ? '-D' : '-d', branch]);
+}
+
+export async function statusPorcelain(repo: string): Promise<string> {
+  return runGit(repo, ['status', '--porcelain']);
+}
+
+export async function unpushedCommits(repo: string): Promise<string> {
+  try {
+    return await runGit(repo, ['log', '@{u}..HEAD', '--oneline']);
+  } catch {
+    return '';
+  }
+}

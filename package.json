@@ -44,6 +44,36 @@
         "command": "atelier.create",
         "title": "Atelier: 새 워크트리 생성",
         "icon": "$(add)"
+      },
+      {
+        "command": "atelier.delete",
+        "title": "Atelier: 워크트리 삭제",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "atelier.openInNewWindow",
+        "title": "Atelier: 새 창에서 열기"
+      },
+      {
+        "command": "atelier.openInCurrent",
+        "title": "Atelier: 현재 창에서 열기"
+      },
+      {
+        "command": "atelier.lock",
+        "title": "Atelier: 잠금"
+      },
+      {
+        "command": "atelier.unlock",
+        "title": "Atelier: 잠금 해제"
+      },
+      {
+        "command": "atelier.prune",
+        "title": "Atelier: stale 워크트리 정리",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "atelier.syncWorktreeInclude",
+        "title": "Atelier: .worktreeinclude 설정 동기화"
       }
     ],
     "menus": {
@@ -57,6 +87,56 @@
           "command": "atelier.refresh",
           "when": "view == atelierWorktrees",
           "group": "navigation@2"
+        },
+        {
+          "command": "atelier.prune",
+          "when": "view == atelierWorktrees",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "atelier.openInNewWindow",
+          "when": "view == atelierWorktrees && viewItem =~ /^worktree/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "atelier.openInCurrent",
+          "when": "view == atelierWorktrees && viewItem =~ /^worktree/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "atelier.lock",
+          "when": "view == atelierWorktrees && viewItem =~ /^worktree/ && !(viewItem =~ /locked/)",
+          "group": "1_state@1"
+        },
+        {
+          "command": "atelier.unlock",
+          "when": "view == atelierWorktrees && viewItem =~ /locked/",
+          "group": "1_state@1"
+        },
+        {
+          "command": "atelier.delete",
+          "when": "view == atelierWorktrees && viewItem =~ /^worktree/",
+          "group": "9_danger@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "atelier.openInNewWindow",
+          "when": "false"
+        },
+        {
+          "command": "atelier.openInCurrent",
+          "when": "false"
+        },
+        {
+          "command": "atelier.lock",
+          "when": "false"
+        },
+        {
+          "command": "atelier.unlock",
+          "when": "false"
         }
       ]
     },
