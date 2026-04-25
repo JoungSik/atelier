@@ -7,9 +7,9 @@
 import { promises as fs } from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import * as vscode from 'vscode';
 import type { CreateWorktreeHook, CreateWorktreeContext } from '../types/index.js';
 import { expandVariables } from '../util/variables.js';
+import { getConfig } from '../config.js';
 
 /** plan 파일 내용 생성 */
 function buildPlanContent(ctx: CreateWorktreeContext): string {
@@ -52,14 +52,10 @@ function buildPlanContent(ctx: CreateWorktreeContext): string {
  */
 export const plansHook: CreateWorktreeHook = {
   async postCreate(ctx: CreateWorktreeContext): Promise<void> {
-    const cfg = vscode.workspace.getConfiguration('atelier');
-    const autoCreate = cfg.get<boolean>('plans.autoCreate', true);
-    if (!autoCreate) return;
+    const cfg = getConfig();
+    if (!cfg.plans.autoCreate) return;
 
-    const plansDir = expandVariables(
-      cfg.get<string>('plans.dir', '${homeDir}/.claude/plans'),
-      { homeDir: os.homedir() },
-    );
+    const plansDir = expandVariables(cfg.plans.dir, { homeDir: os.homedir() });
 
     // plans 디렉토리 생성 (없으면)
     await fs.mkdir(plansDir, { recursive: true });

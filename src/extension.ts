@@ -14,6 +14,7 @@ import { applyEnvIsolation, calculateWorktreeIndex } from './workflow/envIsolati
 import { issueHook } from './integration/issueHook';
 import { claudeMdInjectHook } from './integration/claudeMdInjectHook';
 import { plansHook } from './integration/plansHook';
+import { getConfig } from './config';
 
 let model: WorktreeModel | undefined;
 const hooks: CreateWorktreeHook[] = [];
@@ -100,20 +101,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const envIsolationHook: CreateWorktreeHook = {
     postCreate: async (ctx) => {
-      const setupConfig = vscode.workspace.getConfiguration('atelier');
+      const cfg = getConfig(vscode.Uri.file(ctx.sourceRepo));
 
       const projectTypes = await detectProjectTypes(ctx.path);
 
-      const setupEnabled = setupConfig.get<boolean>('setup.enabled', true);
-      if (setupEnabled) {
-        const customHooks = setupConfig.get<string[]>('setup.hook', []);
-        await runSetupRecipe(ctx.path, projectTypes, customHooks);
+      if (cfg.setup.enabled) {
+        await runSetupRecipe(ctx.path, projectTypes, cfg.setup.hook);
       }
 
-      const envEnabled = setupConfig.get<boolean>('envIsolation.enabled', true);
-      if (envEnabled) {
-        const basePort = setupConfig.get<number>('envIsolation.basePort', 3000);
-        const envFileName = setupConfig.get<string>('envIsolation.envFileName', '.env.worktree');
+      if (cfg.envIsolation.enabled) {
         const repoName = path.basename(ctx.sourceRepo);
         const worktreeName = ctx.branch.replace(/[/\\]/g, '-');
         const worktreeIndex = calculateWorktreeIndex(ctx.path);
@@ -122,9 +118,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           const result = await applyEnvIsolation(ctx.path, {
             repoName,
             worktreeName,
-            basePort,
+            basePort: cfg.envIsolation.basePort,
             worktreeIndex,
-            envFileName,
+            envFileName: cfg.envIsolation.envFileName,
           });
 
           const envInfo: WorktreeEnvInfo = {
@@ -138,7 +134,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           statusBar.registerEnvInfo(envInfo);
 
           void vscode.window.showInformationMessage(
-            `Atelier: 환경 격리 완료 (포트: ${result.port}, Env: ${envFileName})`,
+            `Atelier: 환경 격리 완료 (포트: ${result.port}, Env: ${cfg.envIsolation.envFileName})`,
           );
         } catch (err) {
           void vscode.window.showErrorMessage(

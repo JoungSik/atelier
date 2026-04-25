@@ -10,11 +10,11 @@ import type { Issue, IssueProvider } from './issueProvider.js';
 import { RedmineProvider } from './redmineProvider.js';
 import { GitHubProvider } from './githubProvider.js';
 import { buildBranchName, type BranchPrefix } from './branchName.js';
+import { getConfig } from '../config.js';
 
 /** 설정에서 활성화된 이슈 Provider 목록 반환 */
 function getEnabledProviders(): IssueProvider[] {
-  const cfg = vscode.workspace.getConfiguration('atelier');
-  const enabled = cfg.get<string[]>('issue.providers', ['redmine', 'github']);
+  const enabled = getConfig().issue.providers;
 
   const providers: IssueProvider[] = [];
   if (enabled.includes('redmine')) providers.push(new RedmineProvider());

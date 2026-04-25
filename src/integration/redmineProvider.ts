@@ -56,11 +56,9 @@ export class RedmineProvider implements IssueProvider {
   readonly id = 'redmine' as const;
 
   async search(query: string): Promise<Issue[]> {
-    // vscode는 런타임에만 임포트 (테스트 환경 분리)
-    const vscode = await import('vscode');
-    const cfg = vscode.workspace.getConfiguration('atelier');
-    const endpoint = cfg.get<string>('issue.redmine.endpoint', '');
-    const apiKeyEnv = cfg.get<string>('issue.redmine.apiKeyEnv', 'REDMINE_API_KEY');
+    // config는 vscode를 import 하므로 런타임에만 동적 import (테스트 환경 분리)
+    const { getConfig } = await import('../config.js');
+    const { endpoint, apiKeyEnv } = getConfig().issue.redmine;
 
     if (!endpoint) throw new Error('atelier.issue.redmine.endpoint 설정이 필요합니다');
     const apiKey = process.env[apiKeyEnv] ?? '';
@@ -81,11 +79,9 @@ export class RedmineProvider implements IssueProvider {
   }
 
   async get(id: string | number): Promise<Issue> {
-    // vscode는 런타임에만 임포트 (테스트 환경 분리)
-    const vscode = await import('vscode');
-    const cfg = vscode.workspace.getConfiguration('atelier');
-    const endpoint = cfg.get<string>('issue.redmine.endpoint', '');
-    const apiKeyEnv = cfg.get<string>('issue.redmine.apiKeyEnv', 'REDMINE_API_KEY');
+    // config는 vscode를 import 하므로 런타임에만 동적 import (테스트 환경 분리)
+    const { getConfig } = await import('../config.js');
+    const { endpoint, apiKeyEnv } = getConfig().issue.redmine;
 
     if (!endpoint) throw new Error('atelier.issue.redmine.endpoint 설정이 필요합니다');
     const apiKey = process.env[apiKeyEnv] ?? '';
