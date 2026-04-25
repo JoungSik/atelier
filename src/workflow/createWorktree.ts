@@ -14,9 +14,7 @@ import { expandVariables } from '../util/variables';
 export async function createWorktree(input: CreateWorktreeInput): Promise<void> {
   const config = getConfig(vscode.Uri.file(input.sourceRepo));
 
-  const patterns = config.worktreeInclude.enabled
-    ? await readWorktreeInclude(input.sourceRepo)
-    : [];
+  const patterns = await readWorktreeInclude(input.sourceRepo);
   const includeFiles = patterns.length > 0 ? await enumerateIncludeFiles(input.sourceRepo, patterns) : [];
 
   await fs.mkdir(path.dirname(input.path), { recursive: true });

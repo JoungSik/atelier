@@ -12,12 +12,6 @@ export function getConfig(scope?: vscode.ConfigurationScope): AtelierConfig {
     contextDir: {
       enabled: cfg.get<boolean>('contextDir.enabled', DEFAULTS.contextDir.enabled),
     },
-    worktreeInclude: {
-      enabled: cfg.get<boolean>(
-        'worktreeInclude.enabled',
-        DEFAULTS.worktreeInclude.enabled,
-      ),
-    },
     setup: {
       hook: cfg.get<string[]>('setup.hook', DEFAULTS.setup.hook),
     },
