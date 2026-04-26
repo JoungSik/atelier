@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.3] - 2026-04-26
+
+### Added
+
+- 마켓플레이스 노출용 확장 아이콘(`images/icon.png`) 추가
+
+### Changed
+
+- 중복되는 `onView:atelierWorktrees` activation event 제거 (VS Code가 contributes 선언으로부터 자동 생성)
+
 ## [0.1.2] - 2026-04-26
 
 ### Changed

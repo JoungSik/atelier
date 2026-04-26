@@ -2,7 +2,7 @@
   "name": "joungsik-atelier",
   "displayName": "Atelier (joungsik)",
   "description": "git worktree 자동화 VSCode 확장 (비추적 파일 자동 복사 + 워크트리별 setup hook)",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "joungsik",
   "license": "MIT",
   "type": "module",
@@ -20,8 +20,9 @@
   },
   "categories": ["SCM Providers", "Other"],
   "keywords": ["git", "worktree", "claude", "multi-stack"],
+  "icon": "images/icon.png",
   "main": "./out/extension.js",
-  "activationEvents": ["onView:atelierWorktrees"],
+  "activationEvents": [],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
