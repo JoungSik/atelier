@@ -1,5 +1,13 @@
 # Atelier 프로젝트 규칙
 
+## MCP 자동 호출 규칙
+
+### Redmine
+- 프로젝트 ID: `20`
+- 프로젝트 identifier: `atelier`
+- 프로젝트 URL: https://redmine.joungsik.com/projects/atelier
+- 이슈 검색/조회 시 `project_id` 파라미터에 `20` 또는 `atelier` 사용
+
 ## 커밋 메시지 규칙
 
 - 커밋 메시지에 버전 번호 포함 금지 (예: `0.1.3 -` 같은 prefix 사용 안 함)
